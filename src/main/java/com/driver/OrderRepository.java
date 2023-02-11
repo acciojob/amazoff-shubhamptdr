@@ -70,8 +70,10 @@ public class OrderRepository {
     }
 
     public List<String> getAllOrders() {
+        Collection<Order> values = orderMap.values();
+
         List<String> totalOrder = new ArrayList<>();
-        for (Order order:orderMap.values()){
+        for (Order order: values){
             totalOrder.add(order.getId());
         }
         return totalOrder;
