@@ -5,20 +5,22 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 //@Repository
 public class OrderRepository {
 
-    HashMap<String,Order> orderMap;
-    HashMap<String,DeliveryPartner> partnerMap;
-    HashMap<String,String> orderPartnerMap;
-    HashMap<String,List<Order>> pairMap;
+    Map<String,Order> orderMap;
+    Map<String,DeliveryPartner> partnerMap;
+    Map<String,String> orderPartnerMap;
+    Map<String,List<Order>> pairMap;
 
     public OrderRepository() {
-        orderMap = new HashMap<>();
-        partnerMap = new HashMap<>();
-        orderPartnerMap = new HashMap<>();
-        pairMap = new HashMap<>();
+        orderMap = new ConcurrentHashMap<String,Order>();
+        partnerMap = new ConcurrentHashMap<>();
+        orderPartnerMap = new ConcurrentHashMap<>();
+        pairMap = new ConcurrentHashMap<>();
     }
 
     public String addOrder(Order order) {
