@@ -47,9 +47,11 @@ public class OrderRepository {
         partner.setNumberOfOrders(noOfOrder);
 
         orderPartnerMap.put(orderId,partnerId);
-        List<String> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<>());
-        currentOrder.add(orderMap.get(orderId).getId());
-        pairMap.put(partnerId,currentOrder);
+        synchronized (pairMap){
+            List<String> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<>());
+            currentOrder.add(orderMap.get(orderId).getId());
+            pairMap.put(partnerId,currentOrder);
+        }
         return "New order-partner pair added successfully";
     }
 
@@ -126,27 +128,31 @@ public class OrderRepository {
     }
 
     public String deletePartnerById(String partnerId) {
-        for (String order:pairMap.get(partnerId)){
-            orderPartnerMap.remove(order);
+        synchronized (pairMap){
+            for (String order:pairMap.get(partnerId)){
+                orderPartnerMap.remove(order);
+            }
+            partnerMap.remove(partnerId);
+            pairMap.remove(partnerId);
         }
-        partnerMap.remove(partnerId);
-        pairMap.remove(partnerId);
         return partnerId;
     }
 
     public String deleteOrderById(String orderId) {
 
-        orderMap.remove(orderId);
-        String pId = orderPartnerMap.get(orderId);
-        orderPartnerMap.remove(orderId);
+        synchronized (pairMap){
+            orderMap.remove(orderId);
+            String pId = orderPartnerMap.get(orderId);
+            orderPartnerMap.remove(orderId);
 
-        List<String> orders = pairMap.get(pId);
-        for (String order:orders){
-            if(order.equals(orderId)){
-                orders.remove(order);
+            List<String> orders = pairMap.get(pId);
+            for (String order:orders){
+                if(order.equals(orderId)){
+                    orders.remove(order);
+                }
             }
+            pairMap.put(pId,orders);
         }
-        pairMap.put(pId,orders);
 
         return orderId;
     }
