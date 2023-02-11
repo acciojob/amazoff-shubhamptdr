@@ -39,13 +39,15 @@ public class OrderRepository {
     public String addOrderPartnerPair(String orderId, String partnerId) {
 
         partnerMap.get(partnerId).setNumberOfOrders(partnerMap.get(partnerId).getNumberOfOrders()+1);
-        orderNotAssigned.remove(orderId);
+
         if(pairMap.containsKey(partnerId)){
             List<String> currentOrder = pairMap.get(partnerId);
             currentOrder.add(orderId);
+            orderNotAssigned.remove(orderId);
         }
         else{
             pairMap.put(partnerId,new ArrayList<>(Arrays.asList(orderId)));
+            orderNotAssigned.remove(orderId);
         }
 
         return "New order-partner pair added successfully";
@@ -64,9 +66,13 @@ public class OrderRepository {
     }
 
     public List<String> getOrdersByPartnerId(String partnerId) {
+        List<String> orderList = new ArrayList<>();
 
-        return new ArrayList<>(pairMap.get(partnerId));
-
+        List<String> orderIdList = pairMap.get(partnerId);
+        for(String order : orderIdList){
+            orderList.add(orderMap.get(order).getId());
+        }
+        return orderList;
     }
 
     public List<String> getAllOrders() {
