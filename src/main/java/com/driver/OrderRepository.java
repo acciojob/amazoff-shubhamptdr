@@ -1,5 +1,7 @@
 package com.driver;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 //@Repository
 public class OrderRepository {
 
+    Logger logger = LoggerFactory.getLogger(OrderRepository.class);
     Map<String,Order> orderMap;
     Map<String,DeliveryPartner> partnerMap;
     Map<String,String> orderPartnerMap;
@@ -24,13 +27,14 @@ public class OrderRepository {
     }
 
     public String addOrder(Order order) {
-
+        logger.info("Called AddOrder:"+order);
         orderMap.put(order.getId(), order);
 
         return "New order added successfully";
     }
 
     public String addPartner(String partnerId) {
+        logger.info("Called addPartner:"+partnerId);
 
         DeliveryPartner partner = new DeliveryPartner(partnerId);
         partnerMap.put(partnerId,partner);
@@ -38,6 +42,7 @@ public class OrderRepository {
     }
 
     public String addOrderPartnerPair(String orderId, String partnerId) {
+        logger.info("Called addOrderPartnerPair:"+orderId+":"+partnerId);
 
         DeliveryPartner partner = partnerMap.get(partnerId);
         int noOfOrder = partner.getNumberOfOrders()+1;
@@ -52,11 +57,13 @@ public class OrderRepository {
     }
 
     public Order getOrderById(String orderId) {
+        logger.info("Called addOrderPartnerPair:"+orderId);
 
         return orderMap.get(orderId);
     }
 
     public DeliveryPartner getPartnerById(String partnerId) {
+        logger.info("Called getPartnerById:"+partnerId);
         return partnerMap.get(partnerId);
     }
 
