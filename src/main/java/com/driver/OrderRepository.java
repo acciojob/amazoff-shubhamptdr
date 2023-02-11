@@ -10,7 +10,6 @@ import java.util.*;
 @Repository
 public class OrderRepository {
 
-    Logger logger = LoggerFactory.getLogger(OrderRepository.class);
     private Map<String,Order> orderMap;
     private Map<String,DeliveryPartner> partnerMap;
     private Map<String,List<String>> pairMap;
@@ -24,14 +23,12 @@ public class OrderRepository {
     }
 
     public String addOrder(Order order) {
-        logger.info("Called AddOrder:"+order);
         orderMap.put(order.getId(), order);
         orderNotAssigned.add(order.getId());
         return "New order added successfully";
     }
 
     public String addPartner(String partnerId) {
-        logger.info("Called addPartner:"+partnerId);
 
         partnerMap.put(partnerId,new DeliveryPartner(partnerId));
         return "New delivery partner added successfully";
@@ -63,7 +60,7 @@ public class OrderRepository {
     }
 
     public Integer getOrderCountByPartnerId(String partnerId) {
-        return partnerMap.get(partnerId).getNumberOfOrders();
+        return pairMap.get(partnerId).size();
     }
 
     public List<String> getOrdersByPartnerId(String partnerId) {
