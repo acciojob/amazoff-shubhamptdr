@@ -1,14 +1,12 @@
 package com.driver;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 
-@Service
+//@Service
 public class OrderService {
-    @Autowired
-    private OrderRepository orderRepository;
+    //    @Autowired
+    OrderRepository orderRepository = new OrderRepository();
+
     public String addOrder(Order order) {
         return orderRepository.addOrder(order);
     }
@@ -18,7 +16,7 @@ public class OrderService {
     }
 
     public String addOrderPartnerPair(String orderId, String partnerId) {
-        return orderRepository.addOrderPartnerPair(orderId,partnerId);
+        return orderRepository.addOrderPartnerPair(orderId, partnerId);
     }
 
     public Order getOrderById(String orderId) {
@@ -46,7 +44,7 @@ public class OrderService {
     }
 
     public Integer getOrdersLeftAfterGivenTimeByPartnerId(String time, String partnerId) {
-        return orderRepository.getOrdersLeftAfterGivenTimeByPartnerId(time,partnerId);
+        return orderRepository.getOrdersLeftAfterGivenTimeByPartnerId(time, partnerId);
     }
 
     public String getLastDeliveryTimeByPartnerId(String partnerId) {

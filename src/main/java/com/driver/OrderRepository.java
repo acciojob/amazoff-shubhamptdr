@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-@Repository
+//@Repository
 public class OrderRepository {
 
     HashMap<String,Order> orderMap;
@@ -23,39 +23,28 @@ public class OrderRepository {
 
     public String addOrder(Order order) {
 
-        try {
-            orderMap.put(order.getId(), order);
-        }catch (Exception e){
-            System.out.println(e);
-        }
+        orderMap.put(order.getId(), order);
+
         return "New order added successfully";
     }
 
     public String addPartner(String partnerId) {
-        try {
-            DeliveryPartner partner = new DeliveryPartner(partnerId);
-            partnerMap.put(partnerId,partner);
-        }catch (Exception e){
-            System.out.println(e);
-        }
 
+        DeliveryPartner partner = new DeliveryPartner(partnerId);
+        partnerMap.put(partnerId,partner);
         return "New delivery partner added successfully";
     }
 
     public String addOrderPartnerPair(String orderId, String partnerId) {
-        try{
-            DeliveryPartner partner = partnerMap.get(partnerId);
-            int noOfOrder = partner.getNumberOfOrders()+1;
-            partner.setNumberOfOrders(noOfOrder);
 
-            orderPartnerMap.put(orderId,partnerId);
-            List<Order> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<Order>());
-            currentOrder.add(orderMap.get(orderId));
-            pairMap.put(partnerId,currentOrder);
-        }catch (Exception e){
-            System.out.println(e);
-        }
+        DeliveryPartner partner = partnerMap.get(partnerId);
+        int noOfOrder = partner.getNumberOfOrders()+1;
+        partner.setNumberOfOrders(noOfOrder);
 
+        orderPartnerMap.put(orderId,partnerId);
+        List<Order> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<Order>());
+        currentOrder.add(orderMap.get(orderId));
+        pairMap.put(partnerId,currentOrder);
 
         return "New order-partner pair added successfully";
     }
