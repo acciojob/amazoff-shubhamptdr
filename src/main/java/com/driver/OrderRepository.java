@@ -2,10 +2,8 @@ package com.driver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,7 +15,7 @@ public class OrderRepository {
     Map<String,Order> orderMap;
     Map<String,DeliveryPartner> partnerMap;
     Map<String,String> orderPartnerMap;
-    Map<String,List<Order>> pairMap;
+    Map<String,List<String>> pairMap;
 
     public OrderRepository() {
         orderMap = new ConcurrentHashMap<String,Order>();
@@ -49,10 +47,9 @@ public class OrderRepository {
         partner.setNumberOfOrders(noOfOrder);
 
         orderPartnerMap.put(orderId,partnerId);
-        List<Order> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<Order>());
-        currentOrder.add(orderMap.get(orderId));
+        List<String> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<>());
+        currentOrder.add(orderMap.get(orderId).getId());
         pairMap.put(partnerId,currentOrder);
-
         return "New order-partner pair added successfully";
     }
 
@@ -72,11 +69,7 @@ public class OrderRepository {
     }
 
     public List<String> getOrdersByPartnerId(String partnerId) {
-        List<String> currentOrder = new ArrayList<>();
-        for (Order order:pairMap.get(partnerId)){
-            currentOrder.add(order.getId());
-        }
-        return currentOrder;
+        return new ArrayList<>(pairMap.get(partnerId));
     }
 
     public List<String> getAllOrders() {
@@ -97,8 +90,8 @@ public class OrderRepository {
         int deliveryTime= HH*60 + MM;
 
         int count = 0;
-        for (Order order:pairMap.get(partnerId)){
-            if(deliveryTime < order.getDeliveryTime()){
+        for (String order:pairMap.get(partnerId)){
+            if(deliveryTime < orderMap.get(order).getDeliveryTime()){
                 count++;
             }
         }
@@ -107,7 +100,8 @@ public class OrderRepository {
 
     public String getLastDeliveryTimeByPartnerId(String partnerId) {
         int maxTime = 0;
-        for (Order order:pairMap.get(partnerId)){
+        for (String orderId:pairMap.get(partnerId)){
+            Order order = orderMap.get(orderId);
             if(maxTime < order.getDeliveryTime()){
                 maxTime = order.getDeliveryTime();
             }
@@ -132,8 +126,8 @@ public class OrderRepository {
     }
 
     public String deletePartnerById(String partnerId) {
-        for (Order order:pairMap.get(partnerId)){
-            orderPartnerMap.remove(order.getId());
+        for (String order:pairMap.get(partnerId)){
+            orderPartnerMap.remove(order);
         }
         partnerMap.remove(partnerId);
         pairMap.remove(partnerId);
@@ -146,9 +140,9 @@ public class OrderRepository {
         String pId = orderPartnerMap.get(orderId);
         orderPartnerMap.remove(orderId);
 
-        List<Order> orders = pairMap.get(pId);
-        for (Order order:orders){
-            if(order.getId().equals(orderId)){
+        List<String> orders = pairMap.get(pId);
+        for (String order:orders){
+            if(order.equals(orderId)){
                 orders.remove(order);
             }
         }
