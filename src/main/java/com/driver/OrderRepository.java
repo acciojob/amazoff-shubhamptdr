@@ -71,7 +71,9 @@ public class OrderRepository {
     }
 
     public List<String> getOrdersByPartnerId(String partnerId) {
-        return new ArrayList<>(pairMap.get(partnerId));
+        synchronized (pairMap){
+            return new ArrayList<>(pairMap.get(partnerId));
+        }
     }
 
     public List<String> getAllOrders() {
@@ -87,43 +89,45 @@ public class OrderRepository {
     }
 
     public Integer getOrdersLeftAfterGivenTimeByPartnerId(String time, String partnerId) {
-        int HH = Integer.parseInt(time.substring(0,2));
-        int MM = Integer.parseInt(time.substring(3));
-        int deliveryTime= HH*60 + MM;
-
         int count = 0;
-        for (String order:pairMap.get(partnerId)){
-            if(deliveryTime < orderMap.get(order).getDeliveryTime()){
-                count++;
+        synchronized (pairMap){
+            int HH = Integer.parseInt(time.substring(0,2));
+            int MM = Integer.parseInt(time.substring(3));
+            int deliveryTime= HH*60 + MM;
+
+            for (String order:pairMap.get(partnerId)){
+                if(deliveryTime < orderMap.get(order).getDeliveryTime()){
+                    count++;
+                }
             }
         }
         return count;
     }
 
     public String getLastDeliveryTimeByPartnerId(String partnerId) {
-        int maxTime = 0;
-        for (String orderId:pairMap.get(partnerId)){
-            Order order = orderMap.get(orderId);
-            if(maxTime < order.getDeliveryTime()){
-                maxTime = order.getDeliveryTime();
-            }
-        }
-
         String strTemp;
-        int hours   = maxTime / 60;
-        int minutes    = maxTime % 60;
+        synchronized (pairMap){
+            int maxTime = 0;
+            for (String orderId:pairMap.get(partnerId)){
+                Order order = orderMap.get(orderId);
+                if(maxTime < order.getDeliveryTime()){
+                    maxTime = order.getDeliveryTime();
+                }
+            }
 
-        if(hours < 10)
-            strTemp = "0" + hours + ":";
-        else
-            strTemp = hours + ":";
+            int hours   = maxTime / 60;
+            int minutes    = maxTime % 60;
 
-        if(minutes < 10)
-            strTemp = strTemp + "0" + minutes;
-        else
-            strTemp = strTemp + minutes;
+            if(hours < 10)
+                strTemp = "0" + hours + ":";
+            else
+                strTemp = hours + ":";
 
-
+            if(minutes < 10)
+                strTemp = strTemp + "0" + minutes;
+            else
+                strTemp = strTemp + minutes;
+        }
         return strTemp;
     }
 
