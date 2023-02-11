@@ -3,66 +3,58 @@ package com.driver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 //@Repository
 public class OrderRepository {
 
     Logger logger = LoggerFactory.getLogger(OrderRepository.class);
-    Map<String,Order> orderMap;
-    Map<String,DeliveryPartner> partnerMap;
-    Map<String,String> orderPartnerMap;
-    Map<String,List<String>> pairMap;
+    private Map<String,Order> orderMap;
+    private Map<String,DeliveryPartner> partnerMap;
+    private Map<String,String> orderPartnerMap;
+    private Map<String,List<String>> pairMap;
 
     public OrderRepository() {
-        orderMap = new ConcurrentHashMap<String,Order>();
-        partnerMap = new ConcurrentHashMap<>();
-        orderPartnerMap = new ConcurrentHashMap<>();
-        pairMap = new ConcurrentHashMap<>();
+        orderMap = new HashMap<>();
+        partnerMap = new HashMap<>();
+        orderPartnerMap = new HashMap<>();
+        pairMap = new HashMap<>();
     }
 
     public String addOrder(Order order) {
         logger.info("Called AddOrder:"+order);
         orderMap.put(order.getId(), order);
-
         return "New order added successfully";
     }
 
     public String addPartner(String partnerId) {
         logger.info("Called addPartner:"+partnerId);
 
-        DeliveryPartner partner = new DeliveryPartner(partnerId);
-        partnerMap.put(partnerId,partner);
+        partnerMap.put(partnerId,new DeliveryPartner(partnerId));
         return "New delivery partner added successfully";
     }
 
     public String addOrderPartnerPair(String orderId, String partnerId) {
-        logger.info("Called addOrderPartnerPair:"+orderId+":"+partnerId);
 
-        DeliveryPartner partner = partnerMap.get(partnerId);
-        int noOfOrder = partner.getNumberOfOrders()+1;
-        partner.setNumberOfOrders(noOfOrder);
-
+        partnerMap.get(partnerId).setNumberOfOrders(partnerMap.get(partnerId).getNumberOfOrders()+1);
         orderPartnerMap.put(orderId,partnerId);
-        synchronized (pairMap){
-            List<String> currentOrder = pairMap.getOrDefault(partnerId,new ArrayList<>());
-            currentOrder.add(orderMap.get(orderId).getId());
-            pairMap.put(partnerId,currentOrder);
+        if(pairMap.containsKey(partnerId)){
+            List<String> currentOrder = pairMap.get(partnerId);
+            currentOrder.add(orderId);
         }
+        else{
+            pairMap.put(partnerId,new ArrayList<>(Arrays.asList(orderId)));
+        }
+
         return "New order-partner pair added successfully";
     }
 
     public Order getOrderById(String orderId) {
-        logger.info("Called addOrderPartnerPair:"+orderId);
-
         return orderMap.get(orderId);
     }
 
     public DeliveryPartner getPartnerById(String partnerId) {
-        logger.info("Called getPartnerById:"+partnerId);
         return partnerMap.get(partnerId);
     }
 
@@ -71,9 +63,9 @@ public class OrderRepository {
     }
 
     public List<String> getOrdersByPartnerId(String partnerId) {
-        synchronized (pairMap){
-            return new ArrayList<>(pairMap.get(partnerId));
-        }
+
+        return new ArrayList<>(pairMap.get(partnerId));
+
     }
 
     public List<String> getAllOrders() {
@@ -90,73 +82,73 @@ public class OrderRepository {
 
     public Integer getOrdersLeftAfterGivenTimeByPartnerId(String time, String partnerId) {
         int count = 0;
-        synchronized (pairMap){
-            int HH = Integer.parseInt(time.substring(0,2));
-            int MM = Integer.parseInt(time.substring(3));
-            int deliveryTime= HH*60 + MM;
 
-            for (String order:pairMap.get(partnerId)){
-                if(deliveryTime < orderMap.get(order).getDeliveryTime()){
-                    count++;
-                }
+        int HH = Integer.parseInt(time.substring(0,2));
+        int MM = Integer.parseInt(time.substring(3));
+        int deliveryTime= HH*60 + MM;
+
+        for (String order:pairMap.get(partnerId)){
+            if(deliveryTime < orderMap.get(order).getDeliveryTime()){
+                count++;
             }
         }
+
         return count;
     }
 
     public String getLastDeliveryTimeByPartnerId(String partnerId) {
-        String strTemp;
-        synchronized (pairMap){
-            int maxTime = 0;
+
+        int maxTime = 0;
+        if(pairMap.containsKey(partnerId)){
             for (String orderId:pairMap.get(partnerId)){
-                Order order = orderMap.get(orderId);
-                if(maxTime < order.getDeliveryTime()){
-                    maxTime = order.getDeliveryTime();
+                if(maxTime < orderMap.get(orderId).getDeliveryTime()){
+                    maxTime = orderMap.get(orderId).getDeliveryTime();
                 }
             }
-
-            int hours   = maxTime / 60;
-            int minutes    = maxTime % 60;
-
-            if(hours < 10)
-                strTemp = "0" + hours + ":";
-            else
-                strTemp = hours + ":";
-
-            if(minutes < 10)
-                strTemp = strTemp + "0" + minutes;
-            else
-                strTemp = strTemp + minutes;
         }
-        return strTemp;
+
+
+        int hours   = maxTime / 60;
+        int minutes    = maxTime % 60;
+        StringBuilder strTemp = new StringBuilder();
+        if(hours < 10)
+            strTemp.append("0"+hours+":");
+        else
+            strTemp.append(hours + ":");
+
+        if(minutes < 10)
+            strTemp.append("0" + minutes);
+        else
+            strTemp.append(minutes);
+
+
+        return strTemp.toString();
     }
 
     public String deletePartnerById(String partnerId) {
-        synchronized (pairMap){
+
+        if(pairMap.containsKey(partnerId)){
             for (String order:pairMap.get(partnerId)){
                 orderPartnerMap.remove(order);
             }
-            partnerMap.remove(partnerId);
-            pairMap.remove(partnerId);
         }
+
+        partnerMap.remove(partnerId);
+        pairMap.remove(partnerId);
+
         return partnerId;
     }
 
     public String deleteOrderById(String orderId) {
 
-        synchronized (pairMap){
             orderMap.remove(orderId);
-            String pId = orderPartnerMap.get(orderId);
-            orderPartnerMap.remove(orderId);
-
-            List<String> orders = pairMap.get(pId);
-            for (String order:orders){
-                if(order.equals(orderId)){
-                    orders.remove(order);
-                }
+            if(orderPartnerMap.containsKey(orderId)){
+                String pId = orderPartnerMap.get(orderId);
+                orderPartnerMap.remove(orderId);
+                List<String> orders = pairMap.get(pId);
+                orders.remove(orderId);
+                pairMap.put(pId,orders);
             }
-            pairMap.put(pId,orders);
-        }
 
         return orderId;
     }
